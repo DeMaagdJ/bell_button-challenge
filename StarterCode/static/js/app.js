@@ -56,4 +56,8 @@ function buildCharts(sample) {
 
 };
 
+function optionChanged(firstSample) {
+        
+}
+
 init()
