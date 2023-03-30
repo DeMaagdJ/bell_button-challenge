@@ -18,31 +18,30 @@ d3.json(url).then((data) => {
         selector.append("option").text(name).property("value", name)
     };
 
-    // Set the first sample from the list
+    // Set the first sample from the array
     let firstSample = sampleNames[0]
     console.log(firstSample);
 
     // Build the plots
-    buildMetadata(firstSample);
-    build_bar_charts(firstSample)
-    buildBubbleChart(firstSample);
-    buildGaugeChart(firstSample);
-    ;
+    build_Demographic_info(firstSample);
+    build_bar_charts(firstSample);
+    build_bubble_chart(firstSample);
+    // buildGaugeChart(firstSample);
 
 })
 };
 
 //Function to build demographic info 
 function build_Demographic_info(sample) {
-d3.json(url).then(((data) => {
+d3.json(url).then((data) => {
 
     let metadata = data.metadata;
-    let results_md = metadata.filter(sampleObj => sampleObj.id = sample);
-    console.log(results_md)
-    let result_md = results_md[0];
+    let results = metadata.filter(sampleObj => sampleObj.id == sample);
+    console.log(results)
+    let result = results[0];
 
     d3.select("#sample-metadata").html("")
-    Object.entries(result_md).forEach(([key, value]) => {
+    Object.entries(result).forEach(([key, value]) => {
 
         d3.select("#sample-metadata").append("h5").text(`${key}: ${value}`);
 
@@ -52,27 +51,30 @@ d3.json(url).then(((data) => {
 
 };
 
-
 //Function to build the bar chart
 function build_bar_charts(sample) {
 
     d3.json(url).then((data) => {
     
-
+        //Retrieves all sample data and assign to variables for data manipulation
         let samples = data.samples;
-        let results = samples.filter(sampleObj => sampleObj.id = sample);
+        let results = samples.filter(sampleObj => sampleObj.id == sample);
         let result = results[0];
         let sample_values = result.sample_values;
         let otu_id = result.otu_ids;
         let otu_labels = result.otu_labels;
         
+        //Print to the console to verify the data is properly being filtered in the dropdown menu
         console.log(otu_id, otu_labels, sample_values);
         
+        // Asigns the top ten ids from the source array and returns the selected into a new array
+        // Values are sorted to display the top 10 OTU values from descending order
         let yticks = otu_id.slice(0, 10).map(name => `OTU ${name}`).reverse();
         let xticks = sample_values.slice(0, 10).reverse();
         let labels = otu_labels.slice(0, 10).reverse();
         
-        var trace1 = {
+        //A trace is assigned to format the bar graph
+        var trace_bar = {
             x: xticks,
             y: yticks,
             text: labels,
@@ -80,20 +82,60 @@ function build_bar_charts(sample) {
             orientation: 'h'
         }
 
-        let data1 = [trace1];
-
+// Layout is assigned to present a title in the graph and format the margins
         let layout = {
             title: "The Top 10 OTU's Present",
             margin: {l: 100, r: 100, t: 100, b: 100}};
 
-     Plotly.newPlot("bar", data1, layout);
+     Plotly.newPlot("bar", [trace_bar], layout);
 
     });
 };
 
 
-function optionChanged(newSample) {
-    build_bar_charts(newSample) 
+
+// Function that builds the bubble chart
+function build_bubble_chart(sample) {
+    d3.json(url).then((data) => {
+
+        //Retrieves all sample data and assign to variables for data manipulation
+        let samples = data.samples;
+        let results = samples.filter(sampleObj => sampleObj.id == sample);
+        let result = results[0];
+        let sample_values = result.sample_values;
+        let otu_id = result.otu_ids;
+        let otu_labels = result.otu_labels;
+
+
+         //A trace is assigned to format the bubble graph graph
+        let trace_bubble = {
+            x: otu_id,
+            y: sample_values,
+            text: otu_labels,
+            mode: "markers",
+            marker: {
+                size: sample_values,
+                color: otu_id,
+                colorscale: "Earth"}
+        };
+        // Layout is assigned to present a title in the graph and provide additional data
+        let layout = {
+            title: "Bacteria Per Sample",
+            hovermode: "closest",
+            xaxis: { title: "OTU ID" },
+        };
+
+        // Call Plotly to plot the bubble chart
+        Plotly.newPlot("bubble", [trace_bubble], layout)});
 };
 
+//Function to update the dashboard when a new sample is selected
+function optionChanged(newSample) {
+    build_bar_charts(newSample) 
+    build_Demographic_info(newSample)
+    build_bubble_chart(newSample) 
+
+};
+
+// Call initialize
 init()
